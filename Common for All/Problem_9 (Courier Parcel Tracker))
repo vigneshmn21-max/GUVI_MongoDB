@@ -1,0 +1,35 @@
+// Switching to the courier_service database
+use courier_service;
+
+// Inserting a single parcel record
+db.parcels.insertOne({
+  parcel_id: "TRK-9001",
+  sender_name: "John Doe",
+  receiver_name: "Sara Smith",
+  weight: 2.5, // in kg
+  shipping_cost: 450,
+  booking_date: "2026-04-26",
+  delivery_status: "Pending"
+});
+
+db.giftcards.insertMany([
+  { card_id: "GC-1002", recipient_name: "Charlie Brown", sender_name: "Lucy", amount: 100.00, purchase_date: ISODate("2026-02-01Z"), expiry_date: ISODate("2026-08-01Z"), is_used: false },
+  { card_id: "GC-1003", recipient_name: "Diana Prince", sender_name: "Steve", amount: 75.00, purchase_date: ISODate("2025-12-01Z"), expiry_date: ISODate("2026-03-01Z"), is_used: true },
+  { card_id: "GC-1004", recipient_name: "Edward Nygma", sender_name: "Bruce", amount: 200.00, purchase_date: ISODate("2026-04-20Z"), expiry_date: ISODate("2027-04-20Z"), is_used: false },
+  { card_id: "GC-1005", recipient_name: "Fiona Hill", sender_name: "Shrek", amount: 25.00, purchase_date: ISODate("2026-04-22Z"), expiry_date: ISODate("2026-10-22Z"), is_used: false },
+  { card_id: "GC-1006", recipient_name: "George Miller", sender_name: "Max", amount: 150.00, purchase_date: ISODate("2026-01-10Z"), expiry_date: ISODate("2026-04-25Z"), is_used: false }
+]);
+
+// Finding cards where is_used is false AND expiry_date is in the future
+db.giftcards.find({
+  is_used: false,
+  expiry_date: { $gt: ISODate("2026-04-26T00:00:00Z") }
+});
+
+db.giftcards.find(
+  {}, // Filter: Select all records
+  { recipient_name: 1, amount: 1, expiry_date: 1, _id: 0 } // Projection
+);
+
+// Deleting the gift card with card_id GC-1003
+db.giftcards.deleteOne({ card_id: "GC-1003" });
