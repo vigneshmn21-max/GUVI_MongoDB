@@ -1,0 +1,41 @@
+// Switching to the event_management database
+use event_management;
+
+db.bookings.insertMany([
+  { booking_id: "B-1001", event_name: "Tech Summit 2026", event_date: ISODate("2026-11-15Z"), venue: "Convention Center", customer_name: "Aman Rai", ticket_type: "VIP", number_of_tickets: 2, total_price: 5000, booking_date: ISODate("2026-04-10Z"), payment_status: "Paid" },
+  { booking_id: "B-1002", event_name: "Music Fest", event_date: ISODate("2026-12-05Z"), venue: "Open Air Theater", customer_name: "Sriya P.", ticket_type: "General", number_of_tickets: 4, total_price: 2000, booking_date: ISODate("2026-04-20Z"), payment_status: "Paid" },
+  { booking_id: "B-1003", booking_id: "B-1003", event_name: "Tech Summit 2026", event_date: ISODate("2026-11-15Z"), venue: "Convention Center", customer_name: "Rohan V.", ticket_type: "Student", number_of_tickets: 1, total_price: 800, booking_date: ISODate("2026-03-01Z"), payment_status: "Paid" },
+  { booking_id: "B-1004", event_name: "Art Expo", event_date: ISODate("2023-12-01Z"), venue: "Gallery Hall", customer_name: "Vikram K.", ticket_type: "General", number_of_tickets: 2, total_price: 600, booking_date: ISODate("2023-11-15Z"), payment_status: "Paid" },
+  { booking_id: "B-1005", event_name: "Gaming Con", event_date: ISODate("2026-05-10Z"), venue: "Arena B", customer_name: "Zoya S.", ticket_type: "VIP", number_of_tickets: 3, total_price: 7500, booking_date: ISODate("2023-12-25Z"), payment_status: "Pending" }
+]);
+
+// Finding "Paid" bookings for events after Oct 1, 2026
+db.bookings.find({
+  event_date: { $gt: ISODate("2026-10-01T00:00:00Z") },
+  payment_status: "Paid"
+});
+
+// Setting status to "Refunded" for past events that were paid
+db.bookings.updateMany(
+  { 
+    event_date: { $lt: ISODate("2026-04-26T00:00:00Z") }, 
+    payment_status: "Paid" 
+  },
+  { $set: { payment_status: "Refunded" } }
+);
+
+// Deleting pending bookings from before 2024
+db.bookings.deleteMany({
+  payment_status: "Pending",
+  booking_date: { $lt: ISODate("2024-01-01T00:00:00Z") }
+});
+
+// Calculating total tickets sold for each specific event
+db.bookings.aggregate([
+  {
+    $group: {
+      _id: "$event_name",
+      total_tickets: { $sum: "$number_of_tickets" }
+    }
+  }
+]);
