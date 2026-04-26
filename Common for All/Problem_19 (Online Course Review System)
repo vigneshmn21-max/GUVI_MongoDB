@@ -1,0 +1,34 @@
+// Switching to the elearning_db database
+use elearning_db;
+
+db.reviews.insertMany([
+  { review_id: "REV-201", course_name: "Advanced MongoDB for Devs", student_name: "Anjali", rating: 5, review_text: "Excellent course!", review_date: ISODate("2026-03-10Z"), likes_count: 25, is_verified_purchase: false },
+  { review_id: "REV-202", course_name: "Python Basics", student_name: "Liam", rating: 4, review_text: "Good, but paced quickly.", review_date: ISODate("2026-04-15Z"), likes_count: 5, is_verified_purchase: true },
+  { review_id: "REV-203", course_name: "MongoDB Sharding", student_name: "Sam", rating: 5, review_text: "Very helpful content.", review_date: ISODate("2026-01-20Z"), likes_count: 12, is_verified_purchase: false },
+  { review_id: "REV-204", course_name: "Intro to CSS", student_name: "Raj", rating: 1, review_text: "Not worth the money.", review_date: ISODate("2023-11-05Z"), likes_count: 2, is_verified_purchase: true },
+  { review_id: "REV-205", course_name: "Full Stack Mastery", student_name: "Meera", rating: 3, review_text: "Average.", review_date: ISODate("2026-02-12Z"), likes_count: 8, is_verified_purchase: true }
+]);
+
+// Finding top-tier reviews with high engagement
+db.reviews.find({
+  rating: { $gt: 4 },
+  likes_count: { $gt: 10 }
+});
+
+// Marking reviews as verified for all MongoDB-related courses
+db.reviews.updateMany(
+  { course_name: { $regex: "MongoDB", $options: "i" } },
+  { $set: { is_verified_purchase: true } }
+);
+
+// Deleting 1-star reviews from before 2024
+db.reviews.deleteMany({
+  review_date: { $lt: ISODate("2024-01-01T00:00:00Z") },
+  rating: 1
+});
+
+// Displaying top reviews first with specific fields
+db.reviews.find(
+  {}, 
+  { course_name: 1, student_name: 1, rating: 1, _id: 0 }
+).sort({ rating: -1 });
