@@ -1,0 +1,30 @@
+// Switching to the brew_haven database
+use brew_haven;
+
+// Inserting a single document
+db.menu.insertOne({
+  item_id: 101,
+  name: "Espresso",
+  category: "Coffee",
+  price: 3.50,
+  availability: true
+});
+
+db.menu.insertMany([
+  { item_id: 102, name: "Matcha Latte", category: "Tea", price: 5.00, availability: true },
+  { item_id: 103, name: "Blueberry Muffin", category: "Snack", price: 3.75, availability: true },
+  { item_id: 104, name: "Cold Brew", category: "Coffee", price: 4.50, availability: false },
+  { item_id: 105, name: "Earl Grey", category: "Tea", price: 3.25, availability: true },
+  { item_id: 106, name: "Croissant", category: "Snack", price: 4.00, availability: true }
+]);
+
+// Finding all items where availability is true
+db.menu.find({ availability: true });
+
+db.menu.find(
+  {}, // Empty filter: get all documents
+  { name: 1, price: 1, _id: 0 } // Projection: show name and price only
+);
+
+// Deleting the item with item_id 103
+db.menu.deleteOne({ item_id: 103 });
