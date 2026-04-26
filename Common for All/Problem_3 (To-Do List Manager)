@@ -1,0 +1,31 @@
+// Switching to the productivity_app database
+use productivity_app;
+
+// Inserting a single task
+db.tasks.insertOne({
+  task_id: 501,
+  title: "Setup Database",
+  description: "Install MongoDB and configure the initial schema.",
+  due_date: "2026-05-01",
+  priority: "High",
+  is_completed: false
+});
+
+db.tasks.insertMany([
+  { task_id: 502, title: "Design UI", description: "Create mockups for the dashboard.", due_date: "2026-05-05", priority: "Medium", is_completed: false },
+  { task_id: 503, title: "Buy Groceries", description: "Pick up milk and eggs.", due_date: "2026-04-27", priority: "Low", is_completed: true },
+  { task_id: 504, title: "Fix Login Bug", description: "Resolve the session timeout issue.", due_date: "2026-04-28", priority: "High", is_completed: false },
+  { task_id: 505, title: "Team Meeting", description: "Discuss weekly goals.", due_date: "2026-04-29", priority: "Medium", is_completed: true },
+  { task_id: 506, title: "Workout", description: "45-minute cardio session.", due_date: "2026-04-30", priority: "Low", is_completed: false }
+]);
+
+// Finding all tasks that are not yet completed
+db.tasks.find({ is_completed: false });
+
+db.tasks.find(
+  {}, // Filter: Get all tasks
+  { title: 1, due_date: 1, _id: 0 } // Projection: Only show title and due_date
+);
+
+// Deleting the task with task_id 503
+db.tasks.deleteOne({ task_id: 503 });
