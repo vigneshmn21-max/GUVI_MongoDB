@@ -1,0 +1,31 @@
+// Switching to the hr_management database
+use hr_management;
+
+db.attendance.insertMany([
+  { record_id: "ATT-001", emp_name: "Rahul", department: "IT", date: ISODate("2026-04-20Z"), status: "Absent", check_in_time: null },
+  { record_id: "ATT-002", emp_name: "Sneha", department: "HR", date: ISODate("2026-04-20Z"), status: "Present", check_in_time: "09:15 AM" },
+  { record_id: "ATT-003", emp_name: "Amit", department: "IT", date: ISODate("2023-12-15Z"), status: "Leave", check_in_time: null },
+  { record_id: "ATT-004", emp_name: "Priya", department: "IT", date: ISODate("2026-04-21Z"), status: "Absent", check_in_time: null },
+  { record_id: "ATT-005", emp_name: "Vikram", department: "Sales", date: ISODate("2026-04-21Z"), status: "Present", check_in_time: "10:00 AM" }
+]);
+
+// Finding IT employees who were marked Absent
+db.attendance.find({ 
+  status: "Absent", 
+  department: "IT" 
+});
+
+// Setting status to Present if they have a check-in time recorded
+db.attendance.updateMany(
+  { check_in_time: { $ne: null } },
+  { $set: { status: "Present" } }
+);
+
+// Deleting leave records from before 2024
+db.attendance.deleteMany({
+  status: "Leave",
+  date: { $lt: ISODate("2024-01-01T00:00:00Z") }
+});
+
+// Finding all present employees, sorted chronologically
+db.attendance.find({ status: "Present" }).sort({ date: 1 });
