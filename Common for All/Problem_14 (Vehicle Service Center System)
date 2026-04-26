@@ -1,0 +1,34 @@
+// Switching to the vehicle_service database
+use vehicle_service;
+
+db.service_records.insertMany([
+  { service_id: "SRV-101", customer_name: "John Doe", vehicle_number: "KA-01-AB-1234", service_type: "Oil Change", service_date: ISODate("2026-07-15Z"), cost: 1200, status: "InProgress" },
+  { service_id: "SRV-102", customer_name: "Sara Smith", vehicle_number: "MH-12-XY-5678", service_type: "Repair", service_date: ISODate("2026-08-20Z"), cost: 5000, status: "Scheduled" },
+  { service_id: "SRV-103", customer_name: "Rahul Rao", vehicle_number: "DL-03-CP-9012", service_type: "Inspection", service_date: ISODate("2024-12-10Z"), cost: 450, status: "InProgress" },
+  { service_id: "SRV-104", customer_name: "Elena Gilbert", vehicle_number: "GA-01-Q-1111", service_type: "Oil Change", service_date: ISODate("2026-07-28Z"), cost: 1100, status: "InProgress" },
+  { service_id: "SRV-105", customer_name: "Bruce Wayne", vehicle_number: "BT-00-GG-0001", service_type: "Repair", service_date: ISODate("2024-05-01Z"), cost: 15000, status: "Completed" }
+]);
+
+// Finding "InProgress" records dated before August 1, 2026
+db.service_records.find({
+  status: "InProgress",
+  service_date: { $lt: ISODate("2026-08-01T00:00:00Z") }
+});
+
+// Updating status to "Completed" for all records older than Jan 1, 2025
+db.service_records.updateMany(
+  { service_date: { $lt: ISODate("2025-01-01T00:00:00Z") } },
+  { $set: { status: "Completed" } }
+);
+
+// Deleting completed records with cost less than 500
+db.service_records.deleteMany({
+  status: "Completed",
+  cost: { $lt: 500 }
+});
+
+// Sorting by cost (High to Low) and selecting specific fields
+db.service_records.find(
+  {}, 
+  { customer_name: 1, service_type: 1, cost: 1, _id: 0 }
+).sort({ cost: -1 });
