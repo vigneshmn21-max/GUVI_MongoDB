@@ -1,0 +1,33 @@
+// Switching to the streaming_db database
+use streaming_db;
+
+db.subscriptions.insertMany([
+  { sub_id: "S-01", user_name: "Alice", plan_type: "Premium", monthly_fee: 800, start_date: ISODate("2026-01-10Z"), renewal_date: ISODate("2026-05-10Z"), is_active: true },
+  { sub_id: "S-02", user_name: "Bob", plan_type: "Basic", monthly_fee: 200, start_date: ISODate("2025-11-15Z"), renewal_date: ISODate("2026-05-15Z"), is_active: true },
+  { sub_id: "S-03", user_name: "Charlie", plan_type: "Premium", monthly_fee: 800, start_date: ISODate("2024-06-01Z"), renewal_date: ISODate("2024-12-01Z"), is_active: false },
+  { sub_id: "S-04", user_name: "David", plan_type: "Standard", monthly_fee: 500, start_date: ISODate("2026-02-20Z"), renewal_date: ISODate("2026-05-20Z"), is_active: true },
+  { sub_id: "S-05", user_name: "Eve", plan_type: "Basic", monthly_fee: 200, start_date: ISODate("2024-05-01Z"), renewal_date: ISODate("2024-11-01Z"), is_active: false }
+]);
+
+// Finding active subscriptions on the Premium plan
+db.subscriptions.find({ 
+  is_active: true, 
+  plan_type: "Premium" 
+});
+
+// Increasing monthly_fee by 100 for all Basic plans
+db.subscriptions.updateMany(
+  { plan_type: "Basic" }, 
+  { $inc: { monthly_fee: 100 } }
+);
+
+// Deleting inactive accounts that expired before 2025
+db.subscriptions.deleteMany({
+  is_active: false,
+  renewal_date: { $lt: ISODate("2025-01-01T00:00:00Z") }
+});
+
+db.subscriptions.find(
+  {}, 
+  { user_name: 1, plan_type: 1, monthly_fee: 1, _id: 0 }
+).sort({ monthly_fee: -1 });
