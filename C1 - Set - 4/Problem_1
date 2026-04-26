@@ -1,0 +1,91 @@
+/*
+users Collection         : { user_id: Number, name: String, diet_preference: String }
+
+subscriptionPlans Coll   : { plan_id: Number, user_id: Number, type: String (Weekly/Monthly), 
+                             status: String (Active/Paused), diet_type: String }
+
+meals Collection         : { meal_id: Number, name: String, diet_type: String, calories: Number }
+
+deliveries Collection    : { delivery_id: Number, user_id: Number, delivery_date: Date, 
+                             status: String (Scheduled/Skipped/Delivered), meal_id: Number }
+
+feedback Collection      : { feedback_id: Number, user_id: Number, meal_id: Number, 
+                             rating: Number (1-5), comments: String }
+*/
+
+// Inserting Users
+db.users.insertMany([
+  { user_id: 1, name: "Alice", diet_preference: "Keto" },
+  { user_id: 2, name: "Bob", diet_preference: "Vegan" },
+  { user_id: 3, name: "Charlie", diet_preference: "High-Protein" }
+]);
+
+// Inserting Subscription Plans
+db.subscriptionPlans.insertMany([
+  { plan_id: 101, user_id: 1, type: "Monthly", status: "Active", diet_type: "Keto" },
+  { plan_id: 102, user_id: 2, type: "Weekly", status: "Active", diet_type: "Vegan" }
+]);
+
+// Inserting Meals
+db.meals.insertMany([
+  { meal_id: 501, name: "Keto Avocado Salad", diet_type: "Keto", calories: 450 },
+  { meal_id: 502, name: "Vegan Tofu Stir-fry", diet_type: "Vegan", calories: 350 },
+  { meal_id: 503, name: "Protein Chicken Bowl", diet_type: "High-Protein", calories: 600 }
+]);
+
+// Inserting Delivery Schedules
+db.deliveries.insertMany([
+  { delivery_id: 901, user_id: 1, delivery_date: new Date("2026-05-01"), status: "Scheduled", meal_id: 501 },
+  { delivery_id: 902, user_id: 1, delivery_date: new Date("2026-05-02"), status: "Skipped", meal_id: 501 },
+  { delivery_id: 903, user_id: 2, delivery_date: new Date("2026-05-01"), status: "Scheduled", meal_id: 502 }
+]);
+
+// Inserting Feedback
+db.feedback.insertMany([
+  { feedback_id: 1, user_id: 1, meal_id: 501, rating: 5, comments: "Amazing!" },
+  { feedback_id: 2, user_id: 2, meal_id: 502, rating: 4, comments: "Good, but spicy." }
+]);
+
+db.deliveries.aggregate([
+  { $match: { user_id: 1, status: "Scheduled" } },
+  {
+    $lookup: {
+      from: "subscriptionPlans",
+      localField: "user_id",
+      foreignField: "user_id",
+      as: "plan_details"
+    }
+  },
+  { $match: { "plan_details.status": "Active" } }
+]);
+
+db.subscriptionPlans.updateOne(
+  { user_id: 1, plan_id: 101 },
+  { $set: { status: "Paused" } }
+);
+
+db.subscriptionPlans.updateOne(
+  { user_id: 2 },
+  { $set: { diet_type: "High-Protein" } }
+);
+
+db.subscriptionPlans.aggregate([
+  { $group: { _id: "$diet_type", count: { $sum: 1 } } },
+  { $sort: { count: -1 } },
+  { $limit: 1 }
+]);
+
+db.feedback.aggregate([
+  { 
+    $group: { 
+      _id: "$meal_id", 
+      averageRating: { $avg: "$rating" } 
+    } 
+  }
+]);
+
+db.deliveries.aggregate([
+  { $match: { status: "Skipped" } },
+  { $group: { _id: "$meal_id", skipCount: { $sum: 1 } } },
+  { $sort: { skipCount: -1 } }
+]);
