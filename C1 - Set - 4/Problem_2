@@ -1,0 +1,103 @@
+/*
+Researchers Collection  : { researcher_id: Number, name: String, affiliation: String }
+
+Domains Collection      : { domain_id: Number, name: String, description: String }
+
+Publications Collection : { 
+                            pub_id: Number, 
+                            title: String, 
+                            authors: Array (researcher_ids), 
+                            domain_id: Number, 
+                            year: Number,
+                            citations: Array (pub_ids of papers that cited this)
+                          }
+*/
+
+// Researchers
+db.researchers.insertMany([
+  { researcher_id: 1, name: "Dr. Aris", affiliation: "Computer Science" },
+  { researcher_id: 2, name: "Prof. Sarah", affiliation: "Data Science" },
+  { researcher_id: 3, name: "Kevin", affiliation: "AI Lab" }
+]);
+
+// Domains
+db.domains.insertMany([
+  { domain_id: 501, name: "Machine Learning" },
+  { domain_id: 502, name: "Quantum Computing" }
+]);
+
+// Publications (Note: citations array contains pub_ids)
+db.publications.insertMany([
+  { 
+    pub_id: 101, 
+    title: "Deep Learning Trends", 
+    authors: [1, 3], 
+    domain_id: 501, 
+    year: 2024,
+    citations: [102, 103] 
+  },
+  { 
+    pub_id: 102, 
+    title: "Neural Network Optimization", 
+    authors: [2], 
+    domain_id: 501, 
+    year: 2025,
+    citations: [103] 
+  },
+  { 
+    pub_id: 103, 
+    title: "Quantum AI Foundations", 
+    authors: [1, 2], 
+    domain_id: 502, 
+    year: 2025,
+    citations: [] 
+  }
+]);
+
+db.publications.aggregate([
+  { $match: { authors: 1 } },
+  { 
+    $project: { 
+      title: 1, 
+      citation_count: { $size: "$citations" } 
+    } 
+  }
+]);
+
+db.publications.updateOne(
+  { pub_id: 101 },
+  { $addToSet: { citations: 105 } } 
+);
+
+db.publications.aggregate([
+  { $project: { title: 1, count: { $size: "$citations" } } },
+  { $sort: { count: -1 } },
+  { $limit: 5 }
+]);
+
+db.publications.aggregate([
+  { $unwind: "$authors" }, // Breaks array into individual author documents
+  { $group: { _id: "$authors", pubCount: { $sum: 1 } } },
+  { $sort: { pubCount: -1 } },
+  {
+    $lookup: { // Join with researchers to get their names
+      from: "researchers",
+      localField: "_id",
+      foreignField: "researcher_id",
+      as: "details"
+    }
+  }
+]);
+
+db.publications.aggregate([
+  { $group: { _id: "$domain_id", totalPublications: { $sum: 1 } } },
+  { $sort: { totalPublications: -1 } },
+  {
+    $lookup: {
+      from: "domains",
+      localField: "_id",
+      foreignField: "domain_id",
+      as: "domain_info"
+    }
+  }
+]);
