@@ -1,0 +1,40 @@
+// Switching to the influencer_db database
+use influencer_db;
+
+db.followers.insertMany([
+  { follower_id: "F-001", follower_name: "Zoe", followed_since: ISODate("2024-05-10Z"), engagement_score: 95, is_active: true, location: "New York", interests: ["Tech", "Photography"], last_interaction_date: ISODate("2026-04-20Z") },
+  { follower_id: "F-002", follower_name: "Mark", followed_since: ISODate("2021-11-15Z"), engagement_score: 15, is_active: true, location: "London", interests: ["Gaming", "Tech"], last_interaction_date: ISODate("2024-12-01Z") },
+  { follower_id: "F-003", follower_name: "Sriya", followed_since: ISODate("2025-01-20Z"), engagement_score: 85, is_active: true, location: "Mumbai", interests: ["Fashion", "Travel"], last_interaction_date: ISODate("2026-04-25Z") },
+  { follower_id: "F-004", follower_name: "Leo", followed_since: ISODate("2024-08-01Z"), engagement_score: 40, is_active: false, location: "Paris", interests: ["Photography", "Travel"], last_interaction_date: ISODate("2025-06-10Z") },
+  { follower_id: "F-005", follower_name: "Elena", followed_since: ISODate("2026-02-15Z"), engagement_score: 90, is_active: true, location: "Berlin", interests: ["Tech", "Gaming"], last_interaction_date: ISODate("2026-04-26Z") }
+]);
+
+// Finding active followers with an engagement score > 80
+db.followers.find({
+  is_active: true,
+  engagement_score: { $gt: 80 }
+});
+
+// Updating is_active to false for no interactions since 2024
+db.followers.updateMany(
+  { last_interaction_date: { $lt: ISODate("2025-01-01T00:00:00Z") } },
+  { $set: { is_active: false } }
+);
+
+// Deleting followers from before 2022 with score < 20
+db.followers.deleteMany({
+  followed_since: { $lt: ISODate("2022-01-01T00:00:00Z") },
+  engagement_score: { $lt: 20 }
+});
+
+// Finding the most common interests among all followers
+db.followers.aggregate([
+  { $unwind: "$interests" },
+  { 
+    $group: { 
+      _id: "$interests", 
+      count: { $sum: 1 } 
+    } 
+  },
+  { $sort: { count: -1 } }
+]);
