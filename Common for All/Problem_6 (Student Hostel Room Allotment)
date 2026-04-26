@@ -1,0 +1,31 @@
+// Switching to the hostel_management database
+use hostel_management;
+
+// Inserting a single student record
+db.hostel.insertOne({
+  student_id: 301,
+  name: "Arjun Kumar",
+  room_number: 101,
+  block_name: "A",
+  bed_number: 1,
+  check_in_date: "2026-04-15"
+});
+
+db.hostel.insertMany([
+  { student_id: 302, name: "Siddharth Rao", room_number: 102, block_name: "A", bed_number: 2, check_in_date: "2026-04-16" },
+  { student_id: 303, name: "Karan Singh", room_number: 201, block_name: "B", bed_number: 1, check_in_date: "2026-04-16" },
+  { student_id: 304, name: "Aditya Verma", room_number: 101, block_name: "A", bed_number: 3, check_in_date: "2026-04-17" },
+  { student_id: 305, name: "Rohan Das", room_number: 305, block_name: "C", bed_number: 1, check_in_date: "2026-04-18" },
+  { student_id: 306, name: "Ishan Mehra", room_number: 202, block_name: "B", bed_number: 2, check_in_date: "2026-04-20" }
+]);
+
+// Finding all students residing in Block A
+db.hostel.find({ block_name: "A" });
+
+db.hostel.find(
+  {}, // Filter: Select all students
+  { name: 1, room_number: 1, block_name: 1, _id: 0 } // Projection: 1 to show, 0 to hide
+);
+
+// Deleting the record for student_id 305
+db.hostel.deleteOne({ student_id: 305 });
