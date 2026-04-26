@@ -1,0 +1,31 @@
+// Switching to the expense_tracker database
+use expense_tracker;
+
+// Inserting a single expense record
+db.expenses.insertOne({
+  expense_id: 1001,
+  category: "Food",
+  amount: 250,
+  date: "2026-04-25",
+  payment_method: "UPI",
+  note: "Lunch at office"
+});
+
+db.expenses.insertMany([
+  { expense_id: 1002, category: "Transport", amount: 1200, date: "2026-04-25", payment_method: "Card", note: "Fuel for car" },
+  { expense_id: 1003, category: "Bills", amount: 2500, date: "2026-04-24", payment_method: "UPI", note: "Electricity bill" },
+  { expense_id: 1004, category: "Entertainment", amount: 450, date: "2026-04-24", payment_method: "Cash", note: "Movie ticket" },
+  { expense_id: 1005, category: "Food", amount: 150, date: "2026-04-26", payment_method: "UPI", note: "Evening snacks" },
+  { expense_id: 1006, category: "Transport", amount: 600, date: "2026-04-26", payment_method: "Card", note: "Cab to airport" }
+]);
+
+// Finding expenses where amount is greater than 500
+db.expenses.find({ amount: { $gt: 500 } });
+
+db.expenses.find(
+  {}, // Get all documents
+  { category: 1, amount: 1, date: 1, _id: 0 } // Only show these three fields
+);
+
+// Deleting the expense record with expense_id 1004
+db.expenses.deleteOne({ expense_id: 1004 });
