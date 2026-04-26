@@ -1,0 +1,58 @@
+// Switching to the music_app database
+use music_app;
+
+db.playlists.insertMany([
+  { 
+    playlist_id: "PL-001", user_name: "Alice", playlist_name: "Chill Vibes", 
+    songs: [{ title: "Lofi Rain", artist: "Dreamer" }, { title: "Moonlight", artist: "Jazz Cat" }],
+    created_date: ISODate("2026-02-10Z"), total_duration_minutes: 120, is_public: true, play_count: 150 
+  },
+  { 
+    playlist_id: "PL-002", user_name: "Bob", playlist_name: "Workout Mix", 
+    songs: [{ title: "Power Up", artist: "Gym Rat" }],
+    created_date: ISODate("2026-03-01Z"), total_duration_minutes: 45, is_public: true, play_count: 85 
+  },
+  { 
+    playlist_id: "PL-003", user_name: "Alice", playlist_name: "Private Stash", 
+    songs: [{ title: "Secret Track", artist: "Mystery" }],
+    created_date: ISODate("2022-12-20Z"), total_duration_minutes: 60, is_public: false, play_count: 10 
+  },
+  { 
+    playlist_id: "PL-004", user_name: "Charlie", playlist_name: "Party 2026", 
+    songs: [{ title: "Dance All Night", artist: "DJ Beat" }, { title: "Neon Lights", artist: "Synth" }],
+    created_date: ISODate("2026-04-20Z"), total_duration_minutes: 200, is_public: true, play_count: 300 
+  },
+  { 
+    playlist_id: "PL-005", user_name: "Bob", playlist_name: "Focus Study", 
+    songs: [{ title: "Deep Work", artist: "Brainwaves" }],
+    created_date: ISODate("2026-01-15Z"), total_duration_minutes: 90, is_public: true, play_count: 120 
+  }
+]);
+
+// Finding public playlists with more than 100 plays
+db.playlists.find({
+  is_public: true,
+  play_count: { $gt: 100 }
+});
+
+// Incrementing play_count by 1 for playlist PL-002
+db.playlists.updateOne(
+  { playlist_id: "PL-002" },
+  { $inc: { play_count: 1 } }
+);
+
+// Deleting private playlists created before Jan 1, 2023
+db.playlists.deleteMany({
+  is_public: false,
+  created_date: { $lt: ISODate("2023-01-01T00:00:00Z") }
+});
+
+// Finding the average playlist duration for each user
+db.playlists.aggregate([
+  {
+    $group: {
+      _id: "$user_name",
+      average_duration: { $avg: "$total_duration_minutes" }
+    }
+  }
+]);
