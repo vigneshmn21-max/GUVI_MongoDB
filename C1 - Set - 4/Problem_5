@@ -1,0 +1,107 @@
+/*
+airports Collection    : { airport_code: String, name: String, city: String }
+
+passengers Collection  : { passenger_id: Number, name: String, passport_no: String }
+
+flights Collection     : { 
+                           flight_id: String, 
+                           segments: [
+                             { from: String, to: String, departure: Date, arrival: Date }
+                           ],
+                           total_seats: Number,
+                           available_seats: Number,
+                           base_price: Number
+                         }
+
+bookings Collection    : { 
+                           booking_id: String, 
+                           passenger_id: Number, 
+                           flight_id: String,
+                           seats: [String], // e.g., ["12A", "12B"]
+                           status: String, // "Confirmed", "Cancelled"
+                           total_paid: Number
+                         }
+*/
+
+// Airports
+db.airports.insertMany([
+  { airport_code: "JFK", name: "John F. Kennedy", city: "New York" },
+  { airport_code: "LHR", name: "London Heathrow", city: "London" },
+  { airport_code: "DXB", name: "Dubai International", city: "Dubai" }
+]);
+
+// Flights (with connecting legs)
+db.flights.insertOne({
+  flight_id: "AI101",
+  segments: [
+    { from: "JFK", to: "LHR", departure: new Date("2026-06-01T10:00:00Z"), arrival: new Date("2026-06-01T22:00:00Z") },
+    { from: "LHR", to: "DXB", departure: new Date("2026-06-02T02:00:00Z"), arrival: new Date("2026-06-02T09:00:00Z") }
+  ],
+  total_seats: 200,
+  available_seats: 150,
+  base_price: 1200
+});
+
+// Passenger Bookings
+db.bookings.insertOne({
+  booking_id: "BK777",
+  passenger_id: 1,
+  flight_id: "AI101",
+  seats: ["14A"],
+  status: "Confirmed",
+  total_paid: 1350
+});
+
+db.bookings.aggregate([
+  { $match: { passenger_id: 1 } },
+  {
+    $lookup: {
+      from: "flights",
+      localField: "flight_id",
+      foreignField: "flight_id",
+      as: "flight_details"
+    }
+  },
+  { $unwind: "$flight_details" }
+]);
+
+db.flights.updateOne(
+  { flight_id: "AI101", available_seats: { $gt: 0 } }, // Safety check
+  { $inc: { available_seats: -1 } }
+);
+
+db.bookings.updateOne(
+  { booking_id: "BK777" },
+  { $set: { status: "Cancelled" } }
+);
+
+db.flights.aggregate([
+  { 
+    $project: { 
+      flight_id: 1, 
+      occupancy_rate: { 
+        $multiply: [
+          { $divide: [ { $subtract: ["$total_seats", "$available_seats"] }, "$total_seats" ] }, 
+          100
+        ] 
+      } 
+    } 
+  }
+]);
+
+db.bookings.aggregate([
+  { $match: { status: "Confirmed" } },
+  { $group: { _id: "$flight_id", booking_count: { $sum: 1 } } },
+  { $sort: { booking_count: -1 } }
+]);
+
+db.bookings.aggregate([
+  { $match: { status: "Confirmed" } },
+  { 
+    $group: { 
+      _id: "$flight_id", 
+      total_revenue: { $sum: "$total_paid" } 
+    } 
+  },
+  { $sort: { total_revenue: -1 } }
+]);
