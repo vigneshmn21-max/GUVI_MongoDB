@@ -1,0 +1,30 @@
+// Switching to the mall_parking database
+use mall_parking;
+
+// Inserting a single parking slot record
+db.parking.insertOne({
+  slot_id: "P-101",
+  floor: 1,
+  vehicle_type: "Car",
+  is_occupied: false,
+  vehicle_number: null
+});
+
+db.parking.insertMany([
+  { slot_id: "P-102", floor: 1, vehicle_type: "Car", is_occupied: true, vehicle_number: "KA-01-MH-1234" },
+  { slot_id: "B-101", floor: 1, vehicle_type: "Bike", is_occupied: false, vehicle_number: null },
+  { slot_id: "P-201", floor: 2, vehicle_type: "Car", is_occupied: true, vehicle_number: "DL-03-CP-5678" },
+  { slot_id: "B-201", floor: 2, vehicle_type: "Bike", is_occupied: true, vehicle_number: "MH-12-RS-9999" },
+  { slot_id: "P-202", floor: 2, vehicle_type: "Car", is_occupied: false, vehicle_number: null }
+]);
+
+// Finding all available parking slots
+db.parking.find({ is_occupied: false });
+
+db.parking.find(
+  {}, // Filter: Select all slots
+  { slot_id: 1, floor: 1, vehicle_type: 1, _id: 0 } // Projection: 1 to show, 0 to hide
+);
+
+// Deleting the parking slot record with slot_id P-201
+db.parking.deleteOne({ slot_id: "P-201" });
