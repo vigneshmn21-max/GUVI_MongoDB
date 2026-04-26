@@ -1,0 +1,100 @@
+/*
+vendors Collection     : { vendor_id: Number, name: String, commission_rate: Number }
+
+products Collection    : { product_id: Number, name: String, vendor_id: Number, 
+                           price: Number, stock: Number }
+
+customers Collection   : { customer_id: Number, name: String, email: String }
+
+orders Collection      : { 
+                           order_id: Number, 
+                           customer_id: Number, 
+                           items: [ 
+                             { product_id: Number, vendor_id: Number, qty: Number, price: Number } 
+                           ],
+                           total_amount: Number,
+                           order_date: Date 
+                         }
+
+commissions Collection : { commission_id: Number, order_id: Number, vendor_id: Number, 
+                           amount: Number, status: String }
+*/
+
+// Vendors
+db.vendors.insertMany([
+  { vendor_id: 1, name: "TechHub", commission_rate: 0.10 },
+  { vendor_id: 2, name: "FashionFix", commission_rate: 0.15 }
+]);
+
+// Products
+db.products.insertMany([
+  { product_id: 101, name: "Laptop", vendor_id: 1, price: 50000, stock: 10 },
+  { product_id: 201, name: "T-Shirt", vendor_id: 2, price: 1000, stock: 50 }
+]);
+
+// Customers
+db.customers.insertOne({ customer_id: 1, name: "John Doe", email: "john@example.com" });
+
+// Order with items from multiple vendors
+db.orders.insertOne({
+  order_id: 5001,
+  customer_id: 1,
+  items: [
+    { product_id: 101, vendor_id: 1, qty: 1, price: 50000 },
+    { product_id: 201, vendor_id: 2, qty: 2, price: 1000 }
+  ],
+  total_amount: 52000,
+  order_date: new Date()
+});
+
+db.orders.aggregate([
+  { $match: { customer_id: 1 } },
+  { $unwind: "$items" },
+  { 
+    $group: { 
+      _id: "$items.vendor_id", 
+      customer_orders: { $push: "$$ROOT" } 
+    } 
+  }
+]);
+
+db.products.updateOne(
+  { product_id: 101 },
+  { $inc: { stock: -1 } }
+);
+
+// Example: Adding commission for Vendor 1 on Order 5001
+db.commissions.insertOne({
+  commission_id: 701,
+  order_id: 5001,
+  vendor_id: 1,
+  amount: 5000, // (50000 * 0.10)
+  status: "Calculated"
+});
+
+db.orders.aggregate([
+  { $unwind: "$items" },
+  { 
+    $group: { 
+      _id: "$items.vendor_id", 
+      totalRevenue: { $sum: { $multiply: ["$items.qty", "$items.price"] } } 
+    } 
+  }
+]);
+
+db.orders.aggregate([
+  { $unwind: "$items" },
+  { $group: { _id: "$items.vendor_id", salesCount: { $sum: "$items.qty" } } },
+  { $sort: { salesCount: -1 } },
+  { $limit: 3 }
+]);
+
+db.orders.aggregate([
+  { 
+    $project: { 
+      order_id: 1, 
+      vendor_count: { $size: { $setUnion: "$items.vendor_id" } } 
+    } 
+  },
+  { $match: { vendor_count: { $gt: 1 } } }
+]);
