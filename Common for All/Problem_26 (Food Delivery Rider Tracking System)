@@ -1,0 +1,31 @@
+// Switching to the logistics_db database
+use logistics_db;
+
+db.riders.insertMany([
+  { rider_id: "R-101", rider_name: "Amit", city: "Mumbai", vehicle_type: "Bike", total_deliveries: 25, average_rating: 4.8, current_status: "Available", earnings_today: 500, delivery_history: ["ORD-001", "ORD-005", "ORD-012"] },
+  { rider_id: "R-102", rider_name: "Sanya", city: "Delhi", vehicle_type: "Scooter", total_deliveries: 15, average_rating: 4.2, current_status: "Busy", earnings_today: 300, delivery_history: ["ORD-009", "ORD-015"] },
+  { rider_id: "R-103", rider_name: "Vikram", city: "Bangalore", vehicle_type: "Bike", total_deliveries: 30, average_rating: 4.9, current_status: "Available", earnings_today: 750, delivery_history: ["ORD-020", "ORD-022", "ORD-030"] },
+  { rider_id: "R-104", rider_name: "Zoya", city: "Mumbai", vehicle_type: "Scooter", total_deliveries: 0, average_rating: 0, current_status: "Offline", earnings_today: 0, delivery_history: [] },
+  { rider_id: "R-105", rider_name: "Rahul", city: "Pune", vehicle_type: "Bike", total_deliveries: 22, average_rating: 4.6, current_status: "Available", earnings_today: 450, delivery_history: ["ORD-050", "ORD-055"] }
+]);
+
+// Finding riders who are "Available" and have a rating > 4.5
+db.riders.find({
+  current_status: "Available",
+  average_rating: { $gt: 4.5 }
+});
+
+// Adding a bonus of 100 to riders with > 20 total deliveries
+db.riders.updateMany(
+  { total_deliveries: { $gt: 20 } },
+  { $inc: { earnings_today: 100 } }
+);
+
+// Deleting Offline riders with 0 deliveries
+db.riders.deleteMany({
+  current_status: "Offline",
+  total_deliveries: 0
+});
+
+// Creating a multikey index on the delivery_history array
+db.riders.createIndex({ delivery_history: 1 });
