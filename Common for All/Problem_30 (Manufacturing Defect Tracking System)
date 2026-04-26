@@ -1,0 +1,44 @@
+// Switching to the quality_control database
+use quality_control;
+
+db.defects.insertMany([
+  { defect_id: "D-201", product_name: "Smartphone Screen", batch_number: "B-88", defect_type: "Functional", detection_date: ISODate("2026-04-20Z"), severity: "High", quantity_affected: 50, root_cause: "Sensor calibration error", status: "Open", resolution_date: null },
+  { defect_id: "D-202", product_name: "Casing", batch_number: "B-90", defect_type: "Cosmetic", detection_date: ISODate("2026-04-25Z"), severity: "Low", quantity_affected: 200, root_cause: "Paint scratch", status: "Investigating", resolution_date: null },
+  { defect_id: "D-203", product_name: "Battery Pack", batch_number: "B-45", defect_type: "Safety", detection_date: ISODate("2025-10-10Z"), severity: "High", quantity_affected: 10, root_cause: "Overheating", status: "Open", resolution_date: null },
+  { defect_id: "D-204", product_name: "Circuit Board", batch_number: "B-12", defect_type: "Functional", detection_date: ISODate("2021-11-05Z"), severity: "Medium", quantity_affected: 100, root_cause: "Solder bridge", status: "Resolved", resolution_date: ISODate("2021-12-01Z") },
+  { defect_id: "D-205", product_name: "User Manual", batch_number: "B-101", defect_type: "Cosmetic", detection_date: ISODate("2026-04-26Z"), severity: "Medium", quantity_affected: 500, root_cause: "Typo on cover", status: "Investigating", resolution_date: null }
+]);
+
+// Finding "High" severity defects that are still "Open"
+db.defects.find({
+  severity: "High",
+  status: "Open"
+});
+
+// Resolving defects where root cause has been documented
+db.defects.updateMany(
+  { root_cause: { $ne: null } },
+  { 
+    $set: { 
+      status: "Resolved", 
+      resolution_date: ISODate("2026-04-26T00:00:00Z") 
+    } 
+  }
+);
+
+// Deleting legacy resolved defects from before Jan 1, 2022
+db.defects.deleteMany({
+  detection_date: { $lt: ISODate("2022-01-01T00:00:00Z") },
+  status: "Resolved"
+});
+
+// Analyzing impact: total quantity affected per defect type
+db.defects.aggregate([
+  {
+    $group: {
+      _id: "$defect_type",
+      total_impact: { $sum: "$quantity_affected" }
+    }
+  },
+  { $sort: { total_impact: -1 } }
+]);
