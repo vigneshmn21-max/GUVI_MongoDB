@@ -1,0 +1,28 @@
+// Switching to the warehouse_db database
+use warehouse_db;
+
+db.inventory.insertMany([
+  { product_id: "P-001", product_name: "Industrial Drill", category: "Tools", quantity_in_stock: 15, reorder_level: 20, supplier_name: "ABC Corp", last_restock_date: ISODate("2026-03-10Z"), storage_location: "Aisle 1" },
+  { product_id: "P-002", product_name: "Safety Goggles", category: "Safety", quantity_in_stock: 50, reorder_level: 30, supplier_name: "SafeGuard Inc", last_restock_date: ISODate("2026-04-15Z"), storage_location: "Aisle 4" },
+  { product_id: "P-003", product_name: "Hammer", category: "Tools", quantity_in_stock: 5, reorder_level: 15, supplier_name: "ABC Corp", last_restock_date: ISODate("2021-11-20Z"), storage_location: "Aisle 1" },
+  { product_id: "P-004", product_name: "Steel Bolts", category: "Hardware", quantity_in_stock: 0, reorder_level: 100, supplier_name: "Boltify", last_restock_date: ISODate("2021-06-01Z"), storage_location: "Aisle 9" },
+  { product_id: "P-005", product_name: "Work Gloves", category: "Safety", quantity_in_stock: 120, reorder_level: 50, supplier_name: "ABC Corp", last_restock_date: ISODate("2026-01-22Z"), storage_location: "Aisle 4" }
+]);
+
+// Finding products that need restocking (Stock < Reorder Level)
+db.inventory.find({
+  $expr: { $lt: ["$quantity_in_stock", "$reorder_level"] }
+});
+
+// Adding 100 to quantity_in_stock for all ABC Corp products
+db.inventory.updateMany(
+  { supplier_name: "ABC Corp" },
+  { $inc: { quantity_in_stock: 100 } }
+);
+
+// Deleting dead stock (0 quantity and not restocked since before 2022)
+db.inventory.deleteMany({
+  quantity_in_stock: 0,
+  last_restock_date: { $lt: ISODate("2022-01-01T00:00:00Z") }
+});
+
