@@ -26,3 +26,6 @@ db.inventory.deleteMany({
   last_restock_date: { $lt: ISODate("2022-01-01T00:00:00Z") }
 });
 
+// Creating an index to optimize stock queries by category
+db.inventory.createIndex({ category: 1, quantity_in_stock: -1 });
+
