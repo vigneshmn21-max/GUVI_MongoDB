@@ -1,0 +1,33 @@
+// Switching to the gym_management database
+use gym_management;
+
+db.equipment.insertMany([
+  { equip_id: "EQ-001", equip_name: "Treadmill X1", category: "Cardio", purchase_date: ISODate("2023-05-10Z"), last_maintenance_date: ISODate("2026-02-15Z"), next_maintenance_date: ISODate("2026-08-15Z"), condition: "Good" },
+  { equip_id: "EQ-002", equip_name: "Stationary Bike", category: "Cardio", purchase_date: ISODate("2022-11-01Z"), last_maintenance_date: ISODate("2025-10-01Z"), next_maintenance_date: ISODate("2026-04-01Z"), condition: "NeedsService" },
+  { equip_id: "EQ-003", equip_name: "Bench Press", category: "Strength", purchase_date: ISODate("2014-06-20Z"), last_maintenance_date: ISODate("2024-12-01Z"), next_maintenance_date: ISODate("2025-06-01Z"), condition: "OutOfOrder" },
+  { equip_id: "EQ-004", equip_name: "Rowing Machine", category: "Cardio", purchase_date: ISODate("2024-01-15Z"), last_maintenance_date: ISODate("2026-01-20Z"), next_maintenance_date: ISODate("2026-07-20Z"), condition: "Good" },
+  { equip_id: "EQ-005", equip_name: "Leg Press", category: "Strength", purchase_date: ISODate("2021-03-05Z"), last_maintenance_date: ISODate("2025-09-10Z"), next_maintenance_date: ISODate("2026-03-10Z"), condition: "NeedsService" }
+]);
+
+// Finding equipment that is either "NeedsService" OR "OutOfOrder"
+db.equipment.find({
+  $or: [
+    { condition: "NeedsService" },
+    { condition: "OutOfOrder" }
+  ]
+});
+
+// Updating condition to "Good" for recently serviced gear
+db.equipment.updateMany(
+  { last_maintenance_date: { $gt: ISODate("2025-01-01T00:00:00Z") } },
+  { $set: { condition: "Good" } }
+);
+
+// Deleting "OutOfOrder" equipment purchased before 2015
+db.equipment.deleteMany({
+  purchase_date: { $lt: ISODate("2015-01-01T00:00:00Z") },
+  condition: "OutOfOrder"
+});
+
+// Finding all equipment, sorted by the upcoming maintenance date
+db.equipment.find().sort({ next_maintenance_date: 1 });
