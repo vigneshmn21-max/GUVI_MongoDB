@@ -1,0 +1,31 @@
+// Switching to the fitness_tracker database
+use fitness_tracker;
+
+// Inserting a single workout record
+db.workouts.insertOne({
+  workout_id: 8001,
+  exercise_name: "Running",
+  duration_minutes: 30,
+  calories_burned: 300,
+  date: "2026-04-25",
+  intensity: "High"
+});
+
+db.workouts.insertMany([
+  { workout_id: 8002, exercise_name: "Yoga", duration_minutes: 45, calories_burned: 150, date: "2026-04-25", intensity: "Low" },
+  { workout_id: 8003, exercise_name: "Weightlifting", duration_minutes: 60, calories_burned: 400, date: "2026-04-26", intensity: "High" },
+  { workout_id: 8004, exercise_name: "Cycling", duration_minutes: 20, calories_burned: 200, date: "2026-04-26", intensity: "Medium" },
+  { workout_id: 8005, exercise_name: "Swimming", duration_minutes: 30, calories_burned: 350, date: "2026-04-27", intensity: "High" },
+  { workout_id: 8006, exercise_name: "Walking", duration_minutes: 30, calories_burned: 100, date: "2026-04-27", intensity: "Low" }
+]);
+
+// Finding all high-intensity workouts
+db.workouts.find({ intensity: "High" });
+
+db.workouts.find(
+  {}, // Filter: Select all workouts
+  { exercise_name: 1, duration_minutes: 1, calories_burned: 1, _id: 0 } // Projection
+);
+
+// Deleting the workout record with workout_id 8002
+db.workouts.deleteOne({ workout_id: 8002 });
