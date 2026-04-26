@@ -1,0 +1,31 @@
+// Switching to the travel_agency database
+use travel_agency;
+
+db.itineraries.insertMany([
+  { itinerary_id: "TRP-001", customer_name: "Aditi", destination: "Manali", trip_start_date: ISODate("2026-05-10Z"), trip_end_date: ISODate("2026-05-15Z"), budget: 60000, activities: ["Trekking", "Skiing", "Camping"], hotel_name: "Mountain View", booking_status: "Confirmed" },
+  { itinerary_id: "TRP-002", customer_name: "Rahul", destination: "Goa", trip_start_date: ISODate("2026-04-20Z"), trip_end_date: ISODate("2026-04-25Z"), budget: 45000, activities: ["Surfing", "Beach Volleyball"], hotel_name: "Sun Kissed Resort", booking_status: "Confirmed" },
+  { itinerary_id: "TRP-003", customer_name: "Vikram", destination: "Leh", trip_start_date: ISODate("2026-06-01Z"), trip_end_date: ISODate("2026-06-10Z"), budget: 75000, activities: ["Trekking", "Biking"], hotel_name: "Himalayan Stay", booking_status: "Pending" },
+  { itinerary_id: "TRP-004", customer_name: "Sanya", destination: "Jaipur", trip_start_date: ISODate("2023-12-15Z"), trip_end_date: ISODate("2023-12-20Z"), budget: 30000, activities: ["Sightseeing", "Shopping"], hotel_name: "Royal Palace", booking_status: "Cancelled" },
+  { itinerary_id: "TRP-005", customer_name: "Karan", destination: "Coorg", trip_start_date: ISODate("2026-04-22Z"), trip_end_date: ISODate("2026-04-27Z"), budget: 55000, activities: ["Coffee Tour", "Trekking"], hotel_name: "Green Glen", booking_status: "Confirmed" }
+]);
+
+// Finding confirmed itineraries with a budget > 50,000
+db.itineraries.find({
+  booking_status: "Confirmed",
+  budget: { $gt: 50000 }
+});
+
+// Updating status to "Cancelled" for trips that were supposed to start in the past
+db.itineraries.updateMany(
+  { trip_start_date: { $lt: ISODate("2026-04-26T00:00:00Z") } },
+  { $set: { booking_status: "Cancelled" } }
+);
+
+// Deleting legacy cancelled trips from before 2024
+db.itineraries.deleteMany({
+  booking_status: "Cancelled",
+  trip_end_date: { $lt: ISODate("2024-01-01T00:00:00Z") }
+});
+
+// Finding all trips that include "Trekking" in the activities array
+db.itineraries.find({ activities: "Trekking" });
