@@ -1,0 +1,34 @@
+// Switching to the hospital_management database
+use hospital_management;
+
+db.beds.insertMany([
+  { bed_id: "B-101", ward_name: "ICU", bed_type: "ICU", is_occupied: false, patient_name: null, admission_date: null, expected_discharge_date: null },
+  { bed_id: "B-102", ward_name: "General", bed_type: "General", is_occupied: true, patient_name: "John Doe", admission_date: ISODate("2026-04-20Z"), expected_discharge_date: ISODate("2026-04-25Z") },
+  { bed_id: "B-103", ward_name: "ICU", bed_type: "ICU", is_occupied: true, patient_name: "Sara Smith", admission_date: ISODate("2026-04-26Z"), expected_discharge_date: ISODate("2026-04-30Z") },
+  { bed_id: "B-104", ward_name: "Private", bed_type: "Private", is_occupied: false, patient_name: null, admission_date: null, expected_discharge_date: null },
+  { bed_id: "B-105", ward_name: "ICU", bed_type: "ICU", is_occupied: false, patient_name: null, admission_date: null, expected_discharge_date: null }
+]);
+
+// Finding available beds specifically in the ICU
+db.beds.find({
+  is_occupied: false,
+  ward_name: "ICU"
+});
+
+// Occupying beds that have an admission scheduled for today
+db.beds.updateMany(
+  { admission_date: ISODate("2026-04-26T00:00:00Z") },
+  { $set: { is_occupied: true, patient_name: "Admission In-Progress" } }
+);
+
+// Deleting records for patients who should have been discharged before today
+db.beds.deleteMany({
+  is_occupied: true,
+  expected_discharge_date: { $lt: ISODate("2026-04-26T00:00:00Z") }
+});
+
+// Displaying ward and occupancy info, sorted by bed type (Alphabetical)
+db.beds.find(
+  {}, 
+  { ward_name: 1, bed_type: 1, is_occupied: 1, _id: 0 }
+).sort({ bed_type: 1 });
