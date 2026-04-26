@@ -1,0 +1,111 @@
+/*
+consumers Collection   : { consumer_id: Number, name: String, type: String (Household/Industry), zone: String }
+
+meters Collection      : { meter_id: Number, consumer_id: Number, installation_date: Date }
+
+energyUsage Collection : { 
+                            timestamp: Date, 
+                            meter_id: Number, 
+                            consumption_kwh: Number, 
+                            is_anomaly: Boolean 
+                         }
+*/
+
+// Consumers
+db.consumers.insertMany([
+  { consumer_id: 1, name: "Residence A", type: "Household", zone: "North" },
+  { consumer_id: 2, name: "Factory B", type: "Industry", zone: "South" }
+]);
+
+// Meters
+db.meters.insertMany([
+  { meter_id: 8801, consumer_id: 1 },
+  { meter_id: 9901, consumer_id: 2 }
+]);
+
+// Energy Usage (Time-series data)
+db.energyUsage.insertMany([
+  { timestamp: new Date("2026-04-26T08:00:00Z"), meter_id: 8801, consumption_kwh: 1.2, is_anomaly: false },
+  { timestamp: new Date("2026-04-26T09:00:00Z"), meter_id: 8801, consumption_kwh: 1.5, is_anomaly: false },
+  { timestamp: new Date("2026-04-26T10:00:00Z"), meter_id: 8801, consumption_kwh: 12.0, is_anomaly: false }, // Potential spike
+  { timestamp: new Date("2026-04-26T08:00:00Z"), meter_id: 9901, consumption_kwh: 45.0, is_anomaly: false }
+]);
+
+db.energyUsage.aggregate([
+  { 
+    $match: { 
+      meter_id: 8801, 
+      timestamp: { 
+        $gte: new Date("2026-04-26T08:00:00Z"), 
+        $lte: new Date("2026-04-26T12:00:00Z") 
+      } 
+    } 
+  }
+]);
+
+db.energyUsage.updateMany(
+  { consumption_kwh: { $gt: 10.0 }, meter_id: 8801 },
+  { $set: { is_anomaly: true } }
+);
+
+db.energyUsage.aggregate([
+  {
+    $lookup: {
+      from: "meters",
+      localField: "meter_id",
+      foreignField: "meter_id",
+      as: "meter_info"
+    }
+  },
+  { $unwind: "$meter_info" },
+  {
+    $lookup: {
+      from: "consumers",
+      localField: "meter_info.consumer_id",
+      foreignField: "consumer_id",
+      as: "consumer_info"
+    }
+  },
+  { $unwind: "$consumer_info" },
+  { $match: { "consumer_info.type": "Household" } },
+  { $group: { _id: "$consumer_info.name", avgUsage: { $avg: "$consumption_kwh" } } }
+]);
+
+db.energyUsage.aggregate([
+  { 
+    $group: { 
+      _id: { $hour: "$timestamp" }, 
+      total_consumption: { $sum: "$consumption_kwh" } 
+    } 
+  },
+  { $sort: { total_consumption: -1 } },
+  { $limit: 1 }
+]);
+
+db.energyUsage.aggregate([
+  {
+    $lookup: {
+      from: "meters",
+      localField: "meter_id",
+      foreignField: "meter_id",
+      as: "m"
+    }
+  },
+  { $unwind: "$m" },
+  {
+    $lookup: {
+      from: "consumers",
+      localField: "m.consumer_id",
+      foreignField: "consumer_id",
+      as: "c"
+    }
+  },
+  { $unwind: "$c" },
+  { 
+    $group: { 
+      _id: "$c.zone", 
+      totalZoneUsage: { $sum: "$consumption_kwh" } 
+    } 
+  },
+  { $sort: { totalZoneUsage: -1 } }
+]);
