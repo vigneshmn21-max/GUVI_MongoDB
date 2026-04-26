@@ -1,0 +1,39 @@
+// Switching to the hotel_analytics database
+use hotel_analytics;
+
+db.guest_feedback.insertMany([
+  { feedback_id: "F-901", guest_name: "John Doe", hotel_name: "Grand Plaza", room_number: 101, stay_dates: "2026-04-10 to 2026-04-15", cleanliness_rating: 5, service_rating: 4, overall_rating: 5, comments: "Amazing stay!", feedback_date: ISODate("2026-04-16Z"), would_recommend: true },
+  { feedback_id: "F-902", guest_name: "Alice Smith", hotel_name: "Sea Breeze", room_number: 305, stay_dates: "2026-03-05 to 2026-03-08", cleanliness_rating: 2, service_rating: 2, overall_rating: 2, comments: "Room was not clean.", feedback_date: ISODate("2026-03-09Z"), would_recommend: false },
+  { feedback_id: "F-903", guest_name: "Bob Wilson", hotel_name: "Grand Plaza", room_number: 202, stay_dates: "2026-02-15 to 2026-02-18", cleanliness_rating: 4, service_rating: 5, overall_rating: 4, comments: "Great staff.", feedback_date: ISODate("2026-02-19Z"), would_recommend: false },
+  { feedback_id: "F-904", guest_name: "Charlie Brown", hotel_name: "Mountain Inn", room_number: 50, stay_dates: "2022-12-01 to 2022-12-05", cleanliness_rating: 1, service_rating: 1, overall_rating: 1, comments: "Terrible experience.", feedback_date: ISODate("2022-12-06Z"), would_recommend: false },
+  { feedback_id: "F-905", guest_name: "David Miller", hotel_name: "Sea Breeze", room_number: 112, stay_dates: "2026-04-20 to 2026-04-22", cleanliness_rating: 5, service_rating: 5, overall_rating: 5, comments: "Perfect getaway.", feedback_date: ISODate("2026-04-23Z"), would_recommend: true }
+]);
+
+// Finding critical reviews: rating < 3 and wouldn't recommend
+db.guest_feedback.find({
+  overall_rating: { $lt: 3 },
+  would_recommend: false
+});
+
+// Updating recommendation status for high-rated reviews
+db.guest_feedback.updateMany(
+  { overall_rating: { $gt: 4 } },
+  { $set: { would_recommend: true } }
+);
+
+// Deleting legacy 1-star reviews from before Jan 1, 2023
+db.guest_feedback.deleteMany({
+  feedback_date: { $lt: ISODate("2023-01-01T00:00:00Z") },
+  overall_rating: 1
+});
+
+// Calculating average cleanliness and service scores for each hotel
+db.guest_feedback.aggregate([
+  {
+    $group: {
+      _id: "$hotel_name",
+      avg_cleanliness: { $avg: "$cleanliness_rating" },
+      avg_service: { $avg: "$service_rating" }
+    }
+  }
+]);
